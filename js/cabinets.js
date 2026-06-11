@@ -8,6 +8,9 @@ export class Cabinets {
   constructor(scene) {
     this.scene = scene;
     this.baseCell = { i: 1e9, j: 1e9 };
+    // fresh shuffle of ambient residents every visit — the cabinets around
+    // spawn host different people each load (searched/claimed cells stay put)
+    this.salt = (Math.random() * 1e9) | 0;
     try { this.claims = JSON.parse(localStorage.getItem(LS_CLAIMS) || '{}'); } catch (e) { this.claims = {}; }
 
     const n = C.viewCells * 2 + 1;
@@ -23,7 +26,7 @@ export class Cabinets {
   loginFor(i, j) {
     const claimed = this.claims[i + ',' + j];
     if (claimed) return claimed;
-    return CURATED[hash2(i, j) % CURATED.length];
+    return CURATED[(hash2(i, j) + this.salt) % CURATED.length];
   }
   claim(i, j, login) {
     this.claims[i + ',' + j] = login;

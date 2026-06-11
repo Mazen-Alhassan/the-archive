@@ -68,25 +68,16 @@ export class Player {
     // any real input activity refreshes this timestamp — a genuinely held
     // movement key auto-repeats keydown, so a "held" key with NO events for
     // seconds is a phantom (missed keyup) and gets cleared by the watchdog
-    this._lastEvt = performance.now();
-    this.keyInfo = {};   // per-key: time of last event + whether auto-repeat began
-    const touch = () => { this._lastEvt = performance.now(); };
-
+    // NOTE: deliberately NO time-based "stuck key" watchdog — the OS only
+    // auto-repeats the most recently pressed key, so any silence heuristic
+    // falsely releases W during W+A/S/D chords. A keyup can only be missed
+    // when focus moves, and every such moment (blur, focus, visibility,
+    // fullscreen, pointer lock) clears all keys below.
     addEventListener('keydown', (e) => {
-      touch();
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      const k = this.keyInfo[e.code] || (this.keyInfo[e.code] = { last: 0, repeated: false });
-      if (!this.keys[e.code]) k.repeated = false;   // fresh physical press
-      else if (e.repeat) k.repeated = true;         // OS auto-repeat confirmed
-      k.last = this._lastEvt;
       this.keys[e.code] = true;
     });
-    addEventListener('keyup', (e) => {
-      touch();
-      this.keys[e.code] = false;
-    });
-    addEventListener('pointerdown', touch, true);
-    addEventListener('pointerup', touch, true);
+    addEventListener('keyup', (e) => { this.keys[e.code] = false; });
     // ending a drag anywhere (even off-canvas) so the look-drag can't stick on
     addEventListener('pointerup', () => { this.dragging = false; });
 
@@ -224,22 +215,6 @@ export class Player {
   }
 
   _updateWalk(dt) {
-    // --- release phantom (stuck) keys ---------------------------------------
-    // A physically-held key fires OS auto-repeat keydowns continuously. Two
-    // tiers: once auto-repeat has begun, >300ms of silence means the key was
-    // released (we just missed the keyup — fullscreen toasts and focus shuffles
-    // eat them); if auto-repeat never began, drop the key after the OS
-    // initial-delay grace of 650ms. Stuck keys die in well under a second.
-    const now = performance.now();
-    for (const code in this.keys) {
-      if (!this.keys[code]) continue;
-      const k = this.keyInfo[code] || { last: 0, repeated: false };
-      const quiet = now - k.last;
-      if ((k.repeated && quiet > 300) || (!k.repeated && quiet > 650)) {
-        this.keys[code] = false;
-      }
-    }
-
     const sprint = this.keys.ShiftLeft || this.keys.ShiftRight;
     const maxV = C.moveSpeed * (sprint ? 2.1 : 1);
     const accel = maxV * 3.8;
