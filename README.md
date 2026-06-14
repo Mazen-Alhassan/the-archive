@@ -1,10 +1,10 @@
-# The Archive
+# The Archive (inspo: file cabinet scene from the movie "Soul")
 
 > Every cabinet, a person. Every drawer, a repository.
 
 The Archive turns GitHub into a place you can walk through. Every account is a filing cabinet standing in a dark, endless hall. Open one and its repositories are the drawers inside. Type a username and you fly across the room to their cabinet.
 
-It runs entirely in the browser. No install, no build step — open the page and start walking.
+It runs entirely in the browser. No install, no build step, open the page and start walking.
 
 **Live:** https://the-archive-mazens-projects-de6b4d2d.vercel.app
 
